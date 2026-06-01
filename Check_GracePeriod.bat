@@ -1,60 +1,59 @@
 @echo off
-chcp 65001 >nul
-:: RDSå®½é™æœŸæ£€æŸ¥è„šæœ¬
-:: ç”¨äºŽéªŒè¯RDSå®½é™æœŸæ˜¯å¦å·²é‡ç½®ä¸º120å¤©
+rem RDS Grace Period Check
+:: ÓÃÓÚÑéÖ¤RDS¿íÏÞÆÚÊÇ·ñÒÑÖØÖÃÎª120Ìì
 
 echo ========================================
-echo RDSå®½é™æœŸçŠ¶æ€æ£€æŸ¥å·¥å…·
+echo RDS¿íÏÞÆÚ×´Ì¬¼ì²é¹¤¾ß
 echo ========================================
 echo.
 
-:: æ£€æŸ¥ç®¡ç†å‘˜æƒé™
+:: ¼ì²é¹ÜÀíÔ±È¨ÏÞ
 net session >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] éœ€è¦ç®¡ç†å‘˜æƒé™ï¼
-    echo è¯·å³é”®ç‚¹å‡»è„šæœ¬é€‰æ‹©"ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ"
+    echo [´íÎó] ÐèÒª¹ÜÀíÔ±È¨ÏÞ£¡
+    echo ÇëÓÒ¼üµã»÷½Å±¾Ñ¡Ôñ"ÒÔ¹ÜÀíÔ±Éí·ÝÔËÐÐ"
     pause
     exit /b 1
 )
 
-:: æ–¹æ³•1: æ£€æŸ¥æ³¨å†Œè¡¨
-echo [æ–¹æ³•1] æ£€æŸ¥æ³¨å†Œè¡¨GracePeriodé¡¹...
+:: ·½·¨1: ¼ì²é×¢²á±í
+echo [·½·¨1] ¼ì²é×¢²á±íGracePeriodÏî...
 reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" >nul 2>&1
 if errorlevel 1 (
-    echo [ä¿¡æ¯] GracePeriodæ³¨å†Œè¡¨é¡¹ä¸å­˜åœ¨
-    echo [æç¤º] å¦‚æžœåˆšæ‰§è¡Œé‡ç½®è„šæœ¬ï¼Œè¿™æ˜¯æ­£å¸¸çŽ°è±¡
-    echo [æç¤º] ç³»ç»Ÿä¼šåœ¨é‡å¯æˆ–æœåŠ¡é‡å¯åŽé‡æ–°åˆ›å»ºå¹¶é‡ç½®ä¸º120å¤©
+    echo [ÐÅÏ¢] GracePeriod×¢²á±íÏî²»´æÔÚ
+    echo [ÌáÊ¾] Èç¹û¸ÕÖ´ÐÐÖØÖÃ½Å±¾£¬ÕâÊÇÕý³£ÏÖÏó
+    echo [ÌáÊ¾] ÏµÍ³»áÔÚÖØÆô»ò·þÎñÖØÆôºóÖØÐÂ´´½¨²¢ÖØÖÃÎª120Ìì
 ) else (
-    echo [æˆåŠŸ] GracePeriodæ³¨å†Œè¡¨é¡¹å­˜åœ¨
-    echo [ä¿¡æ¯] æ­£åœ¨è¯»å–æ³¨å†Œè¡¨é¡¹å†…å®¹...
+    echo [³É¹¦] GracePeriod×¢²á±íÏî´æÔÚ
+    echo [ÐÅÏ¢] ÕýÔÚ¶ÁÈ¡×¢²á±íÏîÄÚÈÝ...
     reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod"
 )
 
 echo.
-echo [æ–¹æ³•2] æ£€æŸ¥TermServiceæœåŠ¡çŠ¶æ€...
+echo [·½·¨2] ¼ì²éTermService·þÎñ×´Ì¬...
 sc query TermService | find "RUNNING" >nul
 if errorlevel 1 (
-    echo [è­¦å‘Š] è¿œç¨‹æ¡Œé¢æœåŠ¡æœªè¿è¡Œ
+    echo [¾¯¸æ] Ô¶³Ì×ÀÃæ·þÎñÎ´ÔËÐÐ
 ) else (
-    echo [æˆåŠŸ] è¿œç¨‹æ¡Œé¢æœåŠ¡æ­£åœ¨è¿è¡Œ
+    echo [³É¹¦] Ô¶³Ì×ÀÃæ·þÎñÕýÔÚÔËÐÐ
 )
 
 echo.
-echo [æ–¹æ³•3] å°è¯•é€šè¿‡PowerShellæŸ¥è¯¢å®½é™æœŸå¤©æ•°...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $ts = Get-WmiObject -Class Win32_TerminalServiceSetting -Namespace root\cimv2\TerminalServices -ErrorAction SilentlyContinue; if ($ts -and $ts.GracePeriodDays) { Write-Host '[æˆåŠŸ] å®½é™æœŸå‰©ä½™å¤©æ•°:' $ts.GracePeriodDays 'å¤©' -ForegroundColor Green; if ($ts.GracePeriodDays -eq 120) { Write-Host '[ä¿¡æ¯] å®½é™æœŸå·²æˆåŠŸé‡ç½®ä¸º120å¤©' -ForegroundColor Green } elseif ($ts.GracePeriodDays -gt 100) { Write-Host '[ä¿¡æ¯] å®½é™æœŸæŽ¥è¿‘120å¤©ï¼Œå¯èƒ½å·²é‡ç½®' -ForegroundColor Yellow } else { Write-Host '[è­¦å‘Š] å®½é™æœŸå‰©ä½™ä¸è¶³100å¤©ï¼Œå¯èƒ½éœ€è¦é‡ç½®' -ForegroundColor Red } } else { Write-Host '[ä¿¡æ¯] æ— æ³•é€šè¿‡WMIæŸ¥è¯¢å®½é™æœŸå¤©æ•°' -ForegroundColor Yellow } } catch { Write-Host '[ä¿¡æ¯] WMIæŸ¥è¯¢å¤±è´¥ï¼ˆå¯èƒ½ç³»ç»Ÿç‰ˆæœ¬ä¸æ”¯æŒï¼‰' -ForegroundColor Yellow }" 2>nul
+echo [·½·¨3] ³¢ÊÔÍ¨¹ýPowerShell²éÑ¯¿íÏÞÆÚÌìÊý...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $ts = Get-WmiObject -Class Win32_TerminalServiceSetting -Namespace root\cimv2\TerminalServices -ErrorAction SilentlyContinue; if ($ts -and $ts.GracePeriodDays) { Write-Host '[³É¹¦] ¿íÏÞÆÚÊ£ÓàÌìÊý:' $ts.GracePeriodDays 'Ìì' -ForegroundColor Green; if ($ts.GracePeriodDays -eq 120) { Write-Host '[ÐÅÏ¢] ¿íÏÞÆÚÒÑ³É¹¦ÖØÖÃÎª120Ìì' -ForegroundColor Green } elseif ($ts.GracePeriodDays -gt 100) { Write-Host '[ÐÅÏ¢] ¿íÏÞÆÚ½Ó½ü120Ìì£¬¿ÉÄÜÒÑÖØÖÃ' -ForegroundColor Yellow } else { Write-Host '[¾¯¸æ] ¿íÏÞÆÚÊ£Óà²»×ã100Ìì£¬¿ÉÄÜÐèÒªÖØÖÃ' -ForegroundColor Red } } else { Write-Host '[ÐÅÏ¢] ÎÞ·¨Í¨¹ýWMI²éÑ¯¿íÏÞÆÚÌìÊý' -ForegroundColor Yellow } } catch { Write-Host '[ÐÅÏ¢] WMI²éÑ¯Ê§°Ü£¨¿ÉÄÜÏµÍ³°æ±¾²»Ö§³Ö£©' -ForegroundColor Yellow }" 2>nul
 if errorlevel 1 (
-    echo [ä¿¡æ¯] PowerShellæŸ¥è¯¢å¤±è´¥ï¼ˆå¯èƒ½æ‰§è¡Œç­–ç•¥å—é™ï¼‰
+    echo [ÐÅÏ¢] PowerShell²éÑ¯Ê§°Ü£¨¿ÉÄÜÖ´ÐÐ²ßÂÔÊÜÏÞ£©
 )
 
 echo.
 echo ========================================
-echo æ£€æŸ¥å®Œæˆ
+echo ¼ì²éÍê³É
 echo.
-echo é‡è¦æç¤º:
-echo 1. å¦‚æžœå®½é™æœŸæ˜¾ç¤ºä¸º120å¤©ï¼Œè¯´æ˜Žé‡ç½®æˆåŠŸ
-echo 2. å¦‚æžœæ˜¾ç¤ºå…¶ä»–æ•°å€¼ï¼Œå¯èƒ½éœ€è¦é‡å¯æœåŠ¡å™¨
-echo 3. å»ºè®®é‡æ–°ç™»å½•RDSä¼šè¯æŸ¥çœ‹å®žé™…çš„å®½é™æœŸæç¤º
-echo 4. æœ€ä½³éªŒè¯æ–¹å¼ï¼šé‡æ–°è¿žæŽ¥RDSï¼ŒæŸ¥çœ‹æ˜¯å¦æ˜¾ç¤º"120å¤©"
+echo ÖØÒªÌáÊ¾:
+echo 1. Èç¹û¿íÏÞÆÚÏÔÊ¾Îª120Ìì£¬ËµÃ÷ÖØÖÃ³É¹¦
+echo 2. Èç¹ûÏÔÊ¾ÆäËûÊýÖµ£¬¿ÉÄÜÐèÒªÖØÆô·þÎñÆ÷
+echo 3. ½¨ÒéÖØÐÂµÇÂ¼RDS»á»°²é¿´Êµ¼ÊµÄ¿íÏÞÆÚÌáÊ¾
+echo 4. ×î¼ÑÑéÖ¤·½Ê½£ºÖØÐÂÁ¬½ÓRDS£¬²é¿´ÊÇ·ñÏÔÊ¾"120Ìì"
 echo ========================================
 echo.
 pause

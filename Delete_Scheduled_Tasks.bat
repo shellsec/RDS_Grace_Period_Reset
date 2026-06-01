@@ -1,77 +1,76 @@
 @echo off
-chcp 65001 >nul
-:: åˆ é™¤RDSå®½é™æœŸé‡ç½®è®¡åˆ’ä»»åŠ¡è„šæœ¬
+rem Delete RDS Grace Period Reset Scheduled Tasks
 
 echo ========================================
-echo åˆ é™¤RDSå®½é™æœŸé‡ç½®è®¡åˆ’ä»»åŠ¡
+echo É¾³ýRDS¿íÏÞÆÚÖØÖÃ¼Æ»®ÈÎÎñ
 echo ========================================
 echo.
 
-:: æ£€æŸ¥ç®¡ç†å‘˜æƒé™
+:: ¼ì²é¹ÜÀíÔ±È¨ÏÞ
 net session >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] éœ€è¦ç®¡ç†å‘˜æƒé™æ‰èƒ½åˆ é™¤è®¡åˆ’ä»»åŠ¡
-    echo è¯·å³é”®ç‚¹å‡»è„šæœ¬é€‰æ‹©"ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œ"
+    echo [´íÎó] ÐèÒª¹ÜÀíÔ±È¨ÏÞ²ÅÄÜÉ¾³ý¼Æ»®ÈÎÎñ
+    echo ÇëÓÒ¼üµã»÷½Å±¾Ñ¡Ôñ"ÒÔ¹ÜÀíÔ±Éí·ÝÔËÐÐ"
     pause
     exit /b 1
 ) else (
-    echo [ä¿¡æ¯] æ£€æµ‹åˆ°ç®¡ç†å‘˜æƒé™ï¼Œç»§ç»­æ‰§è¡Œ...
+    echo [ÐÅÏ¢] ¼ì²âµ½¹ÜÀíÔ±È¨ÏÞ£¬¼ÌÐøÖ´ÐÐ...
 )
 
-:: è®¾ç½®ä»»åŠ¡åç§°
+:: ÉèÖÃÈÎÎñÃû³Æ
 set TASK_NAME_1=RDS_Grace_Period_Reset
 set TASK_NAME_2=RDS_Grace_Period_Reset_NoReboot
 
 echo.
-echo æ£€æµ‹åˆ°çš„RDSç›¸å…³è®¡åˆ’ä»»åŠ¡ï¼š
+echo ¼ì²âµ½µÄRDSÏà¹Ø¼Æ»®ÈÎÎñ£º
 echo ----------------------------------------
 
-:: æ£€æŸ¥ä»»åŠ¡æ˜¯å¦å­˜åœ¨
+:: ¼ì²éÈÎÎñÊÇ·ñ´æÔÚ
 set TASK1_EXISTS=0
 set TASK2_EXISTS=0
 
 schtasks /query /tn "%TASK_NAME_1%" >nul 2>&1
 if errorlevel 1 (
-    echo [ ] æœªæ‰¾åˆ°ä»»åŠ¡: %TASK_NAME_1%
+    echo [ ] Î´ÕÒµ½ÈÎÎñ: %TASK_NAME_1%
 ) else (
-    echo [âœ“] æ‰¾åˆ°ä»»åŠ¡: %TASK_NAME_1% ï¼ˆæ ‡å‡†ç‰ˆ-éœ€é‡å¯ï¼‰
+    echo [+] ÕÒµ½ÈÎÎñ: %TASK_NAME_1% £¨±ê×¼°æ-ÐèÖØÆô£©
     set TASK1_EXISTS=1
 )
 
 schtasks /query /tn "%TASK_NAME_2%" >nul 2>&1
 if errorlevel 1 (
-    echo [ ] æœªæ‰¾åˆ°ä»»åŠ¡: %TASK_NAME_2%
+    echo [ ] Î´ÕÒµ½ÈÎÎñ: %TASK_NAME_2%
 ) else (
-    echo [âœ“] æ‰¾åˆ°ä»»åŠ¡: %TASK_NAME_2% ï¼ˆæ— é‡å¯ç‰ˆï¼‰
+    echo [+] ÕÒµ½ÈÎÎñ: %TASK_NAME_2% £¨ÎÞÖØÆô°æ£©
     set TASK2_EXISTS=1
 )
 
 echo ----------------------------------------
 echo.
 
-:: å¦‚æžœç”¨æˆ·æ²¡æœ‰æ‰¾åˆ°ä»»ä½•ä»»åŠ¡
+:: Èç¹ûÓÃ»§Ã»ÓÐÕÒµ½ÈÎºÎÈÎÎñ
 if %TASK1_EXISTS%==0 if %TASK2_EXISTS%==0 (
-    echo [ä¿¡æ¯] æœªæ£€æµ‹åˆ°ä»»ä½•RDSå®½é™æœŸé‡ç½®ç›¸å…³çš„è®¡åˆ’ä»»åŠ¡
-    echo å¯èƒ½çš„åŽŸå› ï¼š
-    echo 1. ä»»åŠ¡å°šæœªåˆ›å»º
-    echo 2. ä»»åŠ¡å·²è¢«æ‰‹åŠ¨åˆ é™¤
-    echo 3. ä»»åŠ¡åç§°ä¸åŒ¹é…
+    echo [ÐÅÏ¢] Î´¼ì²âµ½ÈÎºÎRDS¿íÏÞÆÚÖØÖÃÏà¹ØµÄ¼Æ»®ÈÎÎñ
+    echo ¿ÉÄÜµÄÔ­Òò£º
+    echo 1. ÈÎÎñÉÐÎ´´´½¨
+    echo 2. ÈÎÎñÒÑ±»ÊÖ¶¯É¾³ý
+    echo 3. ÈÎÎñÃû³Æ²»Æ¥Åä
     echo.
-    echo æç¤ºï¼šå¯é€šè¿‡ä»¥ä¸‹å‘½ä»¤æŸ¥çœ‹æ‰€æœ‰è®¡åˆ’ä»»åŠ¡ï¼š
+    echo ÌáÊ¾£º¿ÉÍ¨¹ýÒÔÏÂÃüÁî²é¿´ËùÓÐ¼Æ»®ÈÎÎñ£º
     echo schtasks /query /fo table
     echo.
     pause
     exit /b 0
 )
 
-:: ç”¨æˆ·é€‰æ‹©é€»è¾‘
-echo é€‰æ‹©åˆ é™¤æ“ä½œï¼š
-echo 1. åˆ é™¤æ‰€æœ‰æ‰¾åˆ°çš„RDSé‡ç½®ä»»åŠ¡ï¼ˆæŽ¨èï¼‰
-echo 2. æ˜¾ç¤ºä»»åŠ¡è¯¦ç»†ä¿¡æ¯åŽå†å†³å®š
-echo 3. å–æ¶ˆæ“ä½œ
+:: ÓÃ»§Ñ¡ÔñÂß¼­
+echo Ñ¡ÔñÉ¾³ý²Ù×÷£º
+echo 1. É¾³ýËùÓÐÕÒµ½µÄRDSÖØÖÃÈÎÎñ£¨ÍÆ¼ö£©
+echo 2. ÏÔÊ¾ÈÎÎñÏêÏ¸ÐÅÏ¢ºóÔÙ¾ö¶¨
+echo 3. È¡Ïû²Ù×÷
 echo.
 
-choice /c 123 /m "è¯·é€‰æ‹©æ“ä½œ"
+choice /c 123 /m "ÇëÑ¡Ôñ²Ù×÷"
 set user_choice=%errorLevel%
 
 if %user_choice%==3 goto :cancel
@@ -81,28 +80,28 @@ if %user_choice%==1 goto :delete_all
 :delete_all
 echo.
 echo ========================================
-echo å¼€å§‹åˆ é™¤è®¡åˆ’ä»»åŠ¡...
+echo ¿ªÊ¼É¾³ý¼Æ»®ÈÎÎñ...
 echo ========================================
 
 if %TASK1_EXISTS%==1 (
     echo.
-    echo [æ­¥éª¤1] åˆ é™¤æ ‡å‡†ç‰ˆä»»åŠ¡: %TASK_NAME_1%
+    echo [²½Öè1] É¾³ý±ê×¼°æÈÎÎñ: %TASK_NAME_1%
     schtasks /delete /tn "%TASK_NAME_1%" /f
     if errorlevel 1 (
-        echo [é”™è¯¯] æ ‡å‡†ç‰ˆä»»åŠ¡åˆ é™¤å¤±è´¥ï¼Œé”™è¯¯ä»£ç : %errorLevel%
+        echo [´íÎó] ±ê×¼°æÈÎÎñÉ¾³ýÊ§°Ü£¬´íÎó´úÂë: %errorLevel%
     ) else (
-        echo [æˆåŠŸ] æ ‡å‡†ç‰ˆä»»åŠ¡å·²åˆ é™¤
+        echo [³É¹¦] ±ê×¼°æÈÎÎñÒÑÉ¾³ý
     )
 )
 
 if %TASK2_EXISTS%==1 (
     echo.
-    echo [æ­¥éª¤2] åˆ é™¤æ— é‡å¯ç‰ˆä»»åŠ¡: %TASK_NAME_2%
+    echo [²½Öè2] É¾³ýÎÞÖØÆô°æÈÎÎñ: %TASK_NAME_2%
     schtasks /delete /tn "%TASK_NAME_2%" /f
     if errorlevel 1 (
-        echo [é”™è¯¯] æ— é‡å¯ç‰ˆä»»åŠ¡åˆ é™¤å¤±è´¥ï¼Œé”™è¯¯ä»£ç : %errorLevel%
+        echo [´íÎó] ÎÞÖØÆô°æÈÎÎñÉ¾³ýÊ§°Ü£¬´íÎó´úÂë: %errorLevel%
     ) else (
-        echo [æˆåŠŸ] æ— é‡å¯ç‰ˆä»»åŠ¡å·²åˆ é™¤
+        echo [³É¹¦] ÎÞÖØÆô°æÈÎÎñÒÑÉ¾³ý
     )
 )
 goto :verify_deletion
@@ -110,29 +109,29 @@ goto :verify_deletion
 :show_details
 echo.
 echo ========================================
-echo è®¡åˆ’ä»»åŠ¡è¯¦ç»†ä¿¡æ¯
+echo ¼Æ»®ÈÎÎñÏêÏ¸ÐÅÏ¢
 echo ========================================
 
 if %TASK1_EXISTS%==1 (
     echo.
-    echo ã€æ ‡å‡†ç‰ˆä»»åŠ¡è¯¦æƒ…ã€‘
-    echo ä»»åŠ¡åç§°: %TASK_NAME_1%
+    echo ¡¾±ê×¼°æÈÎÎñÏêÇé¡¿
+    echo ÈÎÎñÃû³Æ: %TASK_NAME_1%
     echo ----------------------------------------
-    schtasks /query /tn "%TASK_NAME_1%" /fo list /v | findstr /C:"ä»»åŠ¡å" /C:"ä¸‹æ¬¡è¿è¡Œæ—¶é—´" /C:"ä¸Šæ¬¡è¿è¡Œæ—¶é—´" /C:"çŠ¶æ€" /C:"è®¡åˆ’ä»»åŠ¡çŠ¶æ€" /C:"ä¸Šæ¬¡è¿è¡Œç»“æžœ"
+    schtasks /query /tn "%TASK_NAME_1%" /fo list /v | findstr /C:"ÈÎÎñÃû" /C:"ÏÂ´ÎÔËÐÐÊ±¼ä" /C:"ÉÏ´ÎÔËÐÐÊ±¼ä" /C:"×´Ì¬" /C:"¼Æ»®ÈÎÎñ×´Ì¬" /C:"ÉÏ´ÎÔËÐÐ½á¹û"
     echo ----------------------------------------
 )
 
 if %TASK2_EXISTS%==1 (
     echo.
-    echo ã€æ— é‡å¯ç‰ˆä»»åŠ¡è¯¦æƒ…ã€‘
-    echo ä»»åŠ¡åç§°: %TASK_NAME_2%
+    echo ¡¾ÎÞÖØÆô°æÈÎÎñÏêÇé¡¿
+    echo ÈÎÎñÃû³Æ: %TASK_NAME_2%
     echo ----------------------------------------
-    schtasks /query /tn "%TASK_NAME_2%" /fo list /v | findstr /C:"ä»»åŠ¡å" /C:"ä¸‹æ¬¡è¿è¡Œæ—¶é—´" /C:"ä¸Šæ¬¡è¿è¡Œæ—¶é—´" /C:"çŠ¶æ€" /C:"è®¡åˆ’ä»»åŠ¡çŠ¶æ€" /C:"ä¸Šæ¬¡è¿è¡Œç»“æžœ"
+    schtasks /query /tn "%TASK_NAME_2%" /fo list /v | findstr /C:"ÈÎÎñÃû" /C:"ÏÂ´ÎÔËÐÐÊ±¼ä" /C:"ÉÏ´ÎÔËÐÐÊ±¼ä" /C:"×´Ì¬" /C:"¼Æ»®ÈÎÎñ×´Ì¬" /C:"ÉÏ´ÎÔËÐÐ½á¹û"
     echo ----------------------------------------
 )
 
 echo.
-choice /c YN /m "æŸ¥çœ‹å®ŒæˆåŽæ˜¯å¦ç»§ç»­åˆ é™¤è¿™äº›ä»»åŠ¡ (Y/N)"
+choice /c YN /m "²é¿´Íê³ÉºóÊÇ·ñ¼ÌÐøÉ¾³ýÕâÐ©ÈÎÎñ (Y/N)"
 if errorlevel 2 (
     goto :cancel
 ) else (
@@ -141,26 +140,26 @@ if errorlevel 2 (
 
 :verify_deletion
 echo.
-echo [æ­¥éª¤3] éªŒè¯åˆ é™¤ç»“æžœ...
+echo [²½Öè3] ÑéÖ¤É¾³ý½á¹û...
 
 schtasks /query /tn "%TASK_NAME_1%" >nul 2>&1
 if errorlevel 1 (
-    echo [ç¡®è®¤] æ ‡å‡†ç‰ˆä»»åŠ¡å·²æˆåŠŸåˆ é™¤
+    echo [È·ÈÏ] ±ê×¼°æÈÎÎñÒÑ³É¹¦É¾³ý
 ) else (
-    echo [è­¦å‘Š] æ ‡å‡†ç‰ˆä»»åŠ¡ä»ç„¶å­˜åœ¨
+    echo [¾¯¸æ] ±ê×¼°æÈÎÎñÈÔÈ»´æÔÚ
 )
 
 schtasks /query /tn "%TASK_NAME_2%" >nul 2>&1
 if errorlevel 1 (
-    echo [ç¡®è®¤] æ— é‡å¯ç‰ˆä»»åŠ¡å·²æˆåŠŸåˆ é™¤
+    echo [È·ÈÏ] ÎÞÖØÆô°æÈÎÎñÒÑ³É¹¦É¾³ý
 ) else (
-    echo [è­¦å‘Š] æ— é‡å¯ç‰ˆä»»åŠ¡ä»ç„¶å­˜åœ¨
+    echo [¾¯¸æ] ÎÞÖØÆô°æÈÎÎñÈÔÈ»´æÔÚ
 )
 
 echo.
-echo [æ­¥éª¤4] æ£€æŸ¥ç›¸å…³æ–‡ä»¶åŠé€‰é¡¹...
+echo [²½Öè4] ¼ì²éÏà¹ØÎÄ¼þ¼°Ñ¡Ïî...
 echo.
-echo ç›¸å…³çš„è„šæœ¬æ–‡ä»¶ï¼š
+echo Ïà¹ØµÄ½Å±¾ÎÄ¼þ£º
 if exist "%~dp0RDS_Grace_Period_Reset.bat" echo - RDS_Grace_Period_Reset.bat
 if exist "%~dp0RDS_Grace_Period_Reset_NoReboot.bat" echo - RDS_Grace_Period_Reset_NoReboot.bat
 if exist "%~dp0Create_Scheduled_Task.bat" echo - Create_Scheduled_Task.bat
@@ -168,47 +167,47 @@ if exist "%~dp0Create_Scheduled_Task_NoReboot.bat" echo - Create_Scheduled_Task_
 if exist "%~dp0Monitor_RDS_Task.bat" echo - Monitor_RDS_Task.bat
 
 echo.
-echo ç›¸å…³çš„æ—¥å¿—å’Œå¤‡ä»½æ–‡ä»¶ï¼š
+echo Ïà¹ØµÄÈÕÖ¾ºÍ±¸·ÝÎÄ¼þ£º
 dir /b "%~dp0RDS_Reset_Log_*.txt" 2>nul
 dir /b "%~dp0RCM_Backup_*.reg" 2>nul
 
 echo.
-choice /c YN /m "æ˜¯å¦åˆ é™¤æ‰€æœ‰ç›¸å…³çš„æ—¥å¿—å’Œå¤‡ä»½æ–‡ä»¶ (Y/N)"
+choice /c YN /m "ÊÇ·ñÉ¾³ýËùÓÐÏà¹ØµÄÈÕÖ¾ºÍ±¸·ÝÎÄ¼þ (Y/N)"
 if errorlevel 2 (
-    echo [ä¿¡æ¯] å·²ä¿ç•™ç›¸å…³æ–‡ä»¶
+    echo [ÐÅÏ¢] ÒÑ±£ÁôÏà¹ØÎÄ¼þ
 ) else (
     echo.
-    echo åˆ é™¤æ—¥å¿—å’Œå¤‡ä»½æ–‡ä»¶...
+    echo É¾³ýÈÕÖ¾ºÍ±¸·ÝÎÄ¼þ...
     del /f /q "%~dp0RDS_Reset_Log_*.txt" >nul 2>&1
     del /f /q "%~dp0RCM_Backup_*.reg" >nul 2>&1
     del /f /q "%~dp0Monitor_RDS_Task.bat" >nul 2>&1
-    echo [æˆåŠŸ] ç›¸å…³æ–‡ä»¶å·²åˆ é™¤
+    echo [³É¹¦] Ïà¹ØÎÄ¼þÒÑÉ¾³ý
 )
 
 goto :success
 
 :cancel
 echo.
-echo [ä¿¡æ¯] ç”¨æˆ·å–æ¶ˆæ“ä½œï¼Œæœªåˆ é™¤ä»»ä½•è®¡åˆ’ä»»åŠ¡
+echo [ÐÅÏ¢] ÓÃ»§È¡Ïû²Ù×÷£¬Î´É¾³ýÈÎºÎ¼Æ»®ÈÎÎñ
 goto :end
 
 :success
 echo.
 echo ========================================
-echo è®¡åˆ’ä»»åŠ¡åˆ é™¤å®Œæˆï¼
+echo ¼Æ»®ÈÎÎñÉ¾³ýÍê³É£¡
 echo ========================================
 echo.
-echo åˆ é™¤æ‘˜è¦ï¼š
-echo - RDSå®½é™æœŸé‡ç½®ç›¸å…³çš„è®¡åˆ’ä»»åŠ¡å·²åˆ é™¤
-echo - ç³»ç»Ÿå°†ä¸å†è‡ªåŠ¨æ‰§è¡Œé‡ç½®æ“ä½œ
-echo - ç›¸å…³è„šæœ¬æ–‡ä»¶å·²ä¿ç•™ï¼Œå¯æ‰‹åŠ¨æ‰§è¡Œ
+echo É¾³ýÕªÒª£º
+echo - RDS¿íÏÞÆÚÖØÖÃÏà¹ØµÄ¼Æ»®ÈÎÎñÒÑÉ¾³ý
+echo - ÏµÍ³½«²»ÔÙ×Ô¶¯Ö´ÐÐÖØÖÃ²Ù×÷
+echo - Ïà¹Ø½Å±¾ÎÄ¼þÒÑ±£Áô£¬¿ÉÊÖ¶¯Ö´ÐÐ
 echo.
-echo æ³¨æ„äº‹é¡¹ï¼š
-echo 1. åˆ é™¤ä»»åŠ¡åŽéœ€è¦æ‰‹åŠ¨æ‰§è¡ŒRDSé‡ç½®
-echo 2. å¦‚éœ€é‡æ–°å¯ç”¨è‡ªåŠ¨æ‰§è¡Œï¼Œè¯·è¿è¡Œï¼š
-echo    - Create_Scheduled_Task.bat ï¼ˆæ ‡å‡†ç‰ˆï¼‰
-echo    - Create_Scheduled_Task_NoReboot.bat ï¼ˆæ— é‡å¯ç‰ˆï¼‰
-echo 3. æ‰€æœ‰çš„è„šæœ¬æ–‡ä»¶ä»å¯æ‰‹åŠ¨æ‰§è¡Œ
+echo ×¢ÒâÊÂÏî£º
+echo 1. É¾³ýÈÎÎñºóÐèÒªÊÖ¶¯Ö´ÐÐRDSÖØÖÃ
+echo 2. ÈçÐèÖØÐÂÆôÓÃ×Ô¶¯Ö´ÐÐ£¬ÇëÔËÐÐ£º
+echo    - Create_Scheduled_Task.bat £¨±ê×¼°æ£©
+echo    - Create_Scheduled_Task_NoReboot.bat £¨ÎÞÖØÆô°æ£©
+echo 3. ËùÓÐµÄ½Å±¾ÎÄ¼þÈÔ¿ÉÊÖ¶¯Ö´ÐÐ
 echo ========================================
 
 :end

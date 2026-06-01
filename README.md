@@ -1,20 +1,93 @@
 # Windows Server RDS宽限期重置工具
 
+## ☕ 请我喝可乐
+
+开源不易，欢迎赞助支持：
+
+👉 [爱发电](https://ifdian.net/a/shellsec)
+
 ## 概述
-本工具包用于解决Windows Server远程桌面服务(RDS)宽限期问题。当系统提示"远程桌面授权模式尚未配置，远程桌面服务将在120天内停止工作"时，可以使用此工具重置宽限期。
+
+本工具包用于解决 Windows Server 远程桌面服务（RDS）宽限期问题。当系统提示「远程桌面授权模式尚未配置，远程桌面服务将在 120 天内停止工作」时，可通过删除 `GracePeriod` 注册表项并重启 RDS 服务，将宽限期倒计时重置为 120 天。
+
+> **重要**：本工具**不能替代正版 RDS CAL 授权**，仅重置宽限期计时器，属于临时应急方案。
+
+## 当前状态
+
+| 项目 | 状态 |
+|------|------|
+| 全部 8 个 `.bat` 脚本 | ✅ 已修复编码（GBK），可正常使用 |
+| `Check_GracePeriod.ps1` | ✅ UTF-8，可正常使用 |
+| 核心操作顺序 | ✅ 先停 `TermService` → 删注册表 → 再启动服务 |
+| 已知编码报错 | ✅ 已解决（`'xxx' is not recognized`） |
+
+## 你需要哪些脚本？
+
+大多数情况 **只需 2 个**；需要自动化时 **再加 1 个**。
+
+| 优先级 | 脚本 | 用途 |
+|--------|------|------|
+| **必用** | `RDS_Grace_Period_Reset_NoReboot.bat` | 重置宽限期（生产环境首选） |
+| **建议** | `Check_GracePeriod_Simple.bat` | 快速检查注册表与服务状态 |
+| **可选** | `Create_Scheduled_Task_NoReboot.bat` | 创建计划任务，每 2 个月自动重置 |
+| 兜底 | `RDS_Grace_Period_Reset.bat` | 无重启版无效时；配合重启整台服务器 |
+| 兜底 | `Create_Scheduled_Task.bat` | 每 3 个月自动重置并重启服务器 |
+| 按需 | `Check_GracePeriod.bat` / `Check_GracePeriod.ps1` | 需要更详细的检查信息 |
+| 按需 | `Delete_Scheduled_Tasks.bat` | 删除已创建的计划任务 |
+
+**最短流程（3 步）：**
+
+1. 右键以管理员身份运行 `RDS_Grace_Period_Reset_NoReboot.bat`
+2. 重新登录 RDS 会话，确认宽限期约 120 天
+3. （可选）运行 `Check_GracePeriod_Simple.bat` 做辅助验证
+
+## 效果说明
+
+### 是否有效？
+
+**有效，但有前提和限制。** 本工具采用业界长期使用的注册表重置方式，原理成立，脚本实现规范；在合适的 Windows Server 版本上通常能成功重置宽限期。
+
+| 方面 | 说明 |
+|------|------|
+| 原理 | 删除 `GracePeriod` 注册表项后，Windows 在 `TermService` 启动时会重新创建该项，宽限期回到 120 天 |
+| 2008 / 2012 系列 | 通常有效，为主要测试平台 |
+| 2016 / 2019 / 2022 | 可能有效，需在目标环境实测；新系统可能有额外安全限制 |
+| 持久性 | 仅重置 120 天倒计时，**不安装 CAL**；到期后警告会再次出现 |
+| 合规性 | 可能违反 Microsoft 许可协议，长期应购买正版 RDS CAL |
+
+### 如何确认重置成功？
+
+验证优先级（由可靠到间接）：
+
+1. **重新登录 RDS 会话** — 查看宽限期提示是否显示约 120 天（最可靠）
+2. **PowerShell WMI 查询** — `(Get-WmiObject -Class Win32_TerminalServiceSetting -Namespace root\cimv2\TerminalServices).GracePeriodDays`（部分旧版本不支持）
+3. **检查脚本** — 运行 `Check_GracePeriod_Simple.bat` 或 `Check_GracePeriod.ps1`（仅能间接判断）
+
+若执行后未生效，请先**重启整台服务器**；2016 及以上还需检查 UAC、Windows Defender、注册表权限。
+
+### 两个版本怎么选？
+
+两个重置脚本的核心操作顺序**已一致**（先停服务 → 删注册表 → 再启动服务），区别仅在于是否重启整台服务器：
+
+| 脚本 | 服务中断 | 是否重启服务器 | 适用场景 |
+|------|----------|----------------|----------|
+| `RDS_Grace_Period_Reset_NoReboot.bat` | 约 1–2 分钟 | 否 | **生产环境首选** |
+| `RDS_Grace_Period_Reset.bat` | 约 1–2 分钟 | 可选（建议重启） | 兜底方案、测试环境 |
+
+**建议优先使用无重启版**；若重置后宽限期仍未恢复，再试标准版并重启服务器。
 
 ## 兼容性说明
 
-### 完全支持的版本
-- **Windows Server 2012 R2** ✅ (主要测试版本)
-- **Windows Server 2012** ✅ 
+### 完全支持的版本（通常有效）
+- **Windows Server 2012 R2** ✅ 主要测试版本
+- **Windows Server 2012** ✅
 - **Windows Server 2008 R2** ✅
 - **Windows Server 2008** ✅
 
-### 部分支持的版本
-- **Windows Server 2016** ⚠️ (可能需要额外配置)
-- **Windows Server 2019** ⚠️ (可能需要额外配置)
-- **Windows Server 2022** ⚠️ (可能需要额外配置)
+### 部分支持的版本（需实测）
+- **Windows Server 2016** ⚠️ 可能有效，需检查 UAC / Defender / 注册表权限
+- **Windows Server 2019** ⚠️ 可能有效，建议先在测试环境验证
+- **Windows Server 2022** ⚠️ 可能有效，安全机制更严格，需实测
 
 ### 版本差异说明
 - **2008/2008 R2/2012/2012 R2**: 注册表路径和服务名称完全相同，脚本可直接使用
@@ -31,27 +104,22 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 
 ## 文件说明
 
+> 日常使用关注上表 **必用 / 建议 / 可选** 三行即可，其余脚本按需使用。
+
 ### 核心脚本
 
 #### 1. RDS_Grace_Period_Reset.bat
-- **功能**: 手动重置RDS宽限期的主脚本（标准版）
-- **作用**: 删除GracePeriod注册表项，重启RDS服务，可选择重启服务器
-- **特点**: 
-  - 支持自动模式（计划任务调用时自动重启）
-  - 自动备份注册表
-  - 验证重置结果
-- **使用**: 右键以管理员身份运行
+- **功能**: 手动重置 RDS 宽限期（标准版，可选重启服务器）
+- **操作顺序**: 备份 → 停止 TermService → 删除注册表 → 启动 TermService → 可选重启服务器
+- **特点**: 支持自动模式（计划任务调用时自动重启服务器）、自动备份注册表
+- **适用场景**: 无重启版未生效时的兜底方案
 - **计划任务模式**: 传递 `auto` 参数时自动重启服务器
 
-#### 2. RDS_Grace_Period_Reset_NoReboot.bat
-- **功能**: 无需重启服务器的重置脚本（无重启版）
-- **作用**: 仅重启RDS服务，影响最小化
-- **特点**:
-  - 仅重启RDS服务（1-2分钟中断）
-  - 自动记录详细日志
-  - 支持自动模式（计划任务调用）
-- **使用**: 右键以管理员身份运行
-- **适用场景**: 生产环境，需要最小化影响
+#### 2. RDS_Grace_Period_Reset_NoReboot.bat ⭐ 推荐
+- **功能**: 无需重启服务器的重置脚本
+- **操作顺序**: 备份 → 停止 TermService → 删除注册表 → 启动 TermService → 验证
+- **特点**: 中断约 1–2 分钟、自动记录日志（`RDS_Reset_Log_*.txt`）、支持自动模式
+- **适用场景**: **生产环境首选**
 
 ### 计划任务管理脚本
 
@@ -69,7 +137,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 - **作用**: 设置自动化执行，可选择执行频率
 - **特点**:
   - 支持自定义执行频率（每月/每2个月/每3个月/自定义）
-  - 支持自定义执行时间
+  - 支持选择执行时间（凌晨 1:00–6:00 或自定义）
   - 自动重试机制（失败时10分钟后重试）
   - 生成监控脚本
 - **使用**: 右键以管理员身份运行
@@ -82,9 +150,15 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
   - 可选择删除日志和备份文件
 - **使用**: 右键以管理员身份运行
 
+#### 6. Cleanup_Old_Files.bat
+- **功能**: 清理旧的备份/日志文件（内部辅助脚本）
+- **作用**: 按修改时间排序，只保留最新 N 份，删除更早的文件
+- **默认保留**: 5 份（可通过环境变量 `KEEP_BACKUPS` 修改）
+- **调用方式**: 由两个重置脚本在每次执行完成后自动调用，无需手动运行
+
 ### 验证和检查脚本
 
-#### 6. Check_GracePeriod.bat
+#### 7. Check_GracePeriod.bat
 - **功能**: 检查RDS宽限期状态的完整工具
 - **作用**: 通过多种方法验证宽限期是否已重置
 - **检查方法**:
@@ -93,13 +167,13 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
   3. 通过PowerShell WMI查询宽限期天数
 - **使用**: 右键以管理员身份运行
 
-#### 7. Check_GracePeriod_Simple.bat
+#### 8. Check_GracePeriod_Simple.bat
 - **功能**: 简化版宽限期检查工具
 - **作用**: 快速检查宽限期状态（避免复杂的PowerShell命令）
 - **特点**: 简单可靠，适合快速验证
 - **使用**: 右键以管理员身份运行
 
-#### 8. Check_GracePeriod.ps1
+#### 9. Check_GracePeriod.ps1
 - **功能**: PowerShell版本的检查脚本
 - **作用**: 提供更详细的宽限期信息
 - **特点**: 
@@ -115,28 +189,27 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 
 **立即解决问题（无重启）:**
 1. 右键点击 `RDS_Grace_Period_Reset_NoReboot.bat`
-2. 选择"以管理员身份运行"
-3. 脚本会自动处理，仅重启RDS服务（1-2分钟中断）
-4. 无需重启服务器，宽限期重置为120天
-5. 运行 `Check_GracePeriod_Simple.bat` 验证结果
+2. 选择「以管理员身份运行」
+3. 脚本会自动处理，仅重启 RDS 服务（约 1–2 分钟中断）
+4. 无需重启服务器，宽限期应重置为 120 天
+5. 重新登录 RDS 会话验证；也可运行 `Check_GracePeriod_Simple.bat` 做初步检查
 
 **设置自动化（无重启）:**
 1. 右键点击 `Create_Scheduled_Task_NoReboot.bat`
 2. 选择"以管理员身份运行"
 3. 选择执行频率（推荐每2个月）
-4. 选择执行时间（推荐凌晨2:00）
+4. 选择执行时间（推荐凌晨 2:00，可选 1:00–6:00 或自定义）
 5. 系统将创建全自动计划任务
 6. 任务执行时会自动调用脚本，无需人工干预
 
 ### 🔄 标准方案：需重启版本
-**适用于测试环境或彻底重置**
+**适用于无重启版未生效时的兜底方案**
 
 **立即解决问题（需重启）:**
-1. 右键点击 `RDS_Grace_Period_Reset.bat`
-2. 选择"以管理员身份运行"
-3. 按提示操作，建议选择重启服务器
-4. 重启后宽限期将重置为120天
-5. 运行 `Check_GracePeriod_Simple.bat` 验证结果
+1. 右键点击 `RDS_Grace_Period_Reset.bat` → 以管理员身份运行
+2. 脚本会先停服务、删注册表、再启动服务
+3. 按提示**重启整台服务器**以确保完全生效
+4. 重新登录 RDS 会话验证
 
 **设置自动化（需重启）:**
 1. 右键点击 `Create_Scheduled_Task.bat`
@@ -146,11 +219,13 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 5. 可选择立即测试运行一次
 
 ### 🔍 验证宽限期状态
-**检查重置是否成功:**
-1. 运行 `Check_GracePeriod.bat` 或 `Check_GracePeriod_Simple.bat`
-2. 重新登录RDS会话，查看是否还显示宽限期警告
-3. 如果显示，应该显示"120天"
-4. 如果未生效，请重启服务器
+
+**检查重置是否成功（按优先级）:**
+
+1. **重新登录 RDS 会话** — 查看宽限期提示是否显示约 120 天（最可靠）
+2. 运行 `Check_GracePeriod_Simple.bat` 做快速检查（注册表项、服务状态）
+3. 需要详细信息时运行 `Check_GracePeriod.ps1` 或 `Check_GracePeriod.bat`
+4. 若仍未生效 → 重启整台服务器；2016+ 检查 UAC / Defender / 注册表权限
 
 ### 🗑️ 删除自动化任务
 **清理所有计划任务:**
@@ -177,7 +252,7 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 **无重启版计划任务设置:**
 - **任务名称**: RDS_Grace_Period_Reset_NoReboot
 - **执行频率**: 可选择（推荐每2个月）
-- **执行时间**: 可选择（推荐凌晨2:00）
+- **执行时间**: 可选择（凌晨 1:00–6:00 或自定义，推荐 2:00）
 - **运行权限**: 系统最高权限
 - **执行模式**: 自动模式（传递 `auto` 参数）
 - **服务中断**: 仅1-2分钟RDS服务重启
@@ -187,11 +262,12 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 ### 🔄 标准版本操作步骤
 
 **手动重置步骤:**
-1. **备份注册表**: 脚本会自动备份相关注册表项
-2. **删除宽限期项**: 删除 `HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod`
-3. **重启RDS服务**: 重新启动远程桌面服务
-4. **验证结果**: 检查GracePeriod项是否重新创建
-5. **重启服务器**: 建议重启以确保更改完全生效
+1. **备份注册表**: 脚本自动备份 RCM 注册表项
+2. **停止 RDS 服务**: 临时停止 TermService
+3. **删除宽限期项**: 删除 `GracePeriod` 注册表项
+4. **启动 RDS 服务**: 重新启动 TermService
+5. **验证结果**: 检查 GracePeriod 项是否重新创建
+6. **重启服务器**: 建议重启以确保更改完全生效
 
 **标准版计划任务设置:**
 - **任务名称**: RDS_Grace_Period_Reset
@@ -221,15 +297,39 @@ HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePer
 ```
 
 ### 操作原理
-- Windows在启动时检查此注册表项来确定宽限期剩余天数
-- 删除此项后，系统会重新创建并重置为120天
-- 需要重启服务器或RDS服务使更改完全生效
-- 注册表项包含加密的宽限期信息
+
+1. Windows 通过 `GracePeriod` 注册表项记录加密的宽限期倒计时
+2. 删除该项后，`TermService` 重新启动时会自动重建，计数器回到 120 天
+3. **必须先停止 TermService 再删除**（两个重置脚本均已按此顺序实现），否则可能因注册表被占用而删除失败
+4. 服务重启或整台服务器重启后更改才会完全生效
 
 ### 备份机制
-- 脚本执行前会自动备份整个RCM注册表项
-- 备份文件命名格式：`RCM_Backup_YYYYMMDD_HHMM.reg`
+- 脚本执行前会自动备份整个 RCM 注册表项
+- 备份文件命名格式：
+  - 无重启版：`RCM_Backup_NoReboot_YYYYMMDD.reg`
+  - 标准版：`RCM_Backup_YYYYMMDD_HHMM.reg`
 - 备份文件保存在脚本所在目录
+- **自动清理**：每次执行完成后，通过 `Cleanup_Old_Files.bat` 只保留最新 **5** 份备份/日志，更早的自动删除
+
+#### 调整保留份数
+
+默认保留 5 份。如需修改，可在运行重置脚本**之前**设置环境变量：
+
+```cmd
+set KEEP_BACKUPS=10
+RDS_Grace_Period_Reset_NoReboot.bat
+```
+
+或在计划任务中设置系统/用户环境变量 `KEEP_BACKUPS=10`。
+
+## 文件编码说明
+
+| 文件类型 | 编码 | 说明 |
+|----------|------|------|
+| `.bat` | **GBK（ANSI）** | 适配中文 Windows，`cmd.exe` 直接解析 |
+| `.ps1` | **UTF-8** | PowerShell 脚本，正常使用即可 |
+
+> **编辑注意**：修改 `.bat` 后保存为 GBK/ANSI，**不要**保存为 UTF-8，否则会出现 `'xxx' is not recognized` 报错。
 
 ## 监控和维护
 
@@ -263,8 +363,8 @@ Check_GracePeriod_Simple.bat
 4. 可手动运行或修改计划
 
 ### 日志文件位置
-- **注册表备份文件**: `RCM_Backup_YYYYMMDD_HHMM.reg`
-- **无重启版日志**: `RDS_Reset_Log_YYYYMMDD_HHMM.txt`
+- **注册表备份文件**: `RCM_Backup_*.reg`（自动保留最新 5 份）
+- **无重启版日志**: `RDS_Reset_Log_*.txt`（自动保留最新 5 份）
 - **Windows事件日志**: 事件查看器 → Windows日志 → 系统
 
 ### 监控脚本
@@ -335,36 +435,43 @@ Get-WindowsFeature | Where-Object {$_.Name -like "*Remote*"}
 
 ### 常见问题
 
-**1. 脚本执行失败**
+**1. 脚本执行失败 / 出现 `'xxx' is not recognized` 错误**
+- **原因**：`.bat` 文件若为 UTF-8 编码，在中文 Windows 下会被 `cmd.exe` 按 GBK 错误解析，中文行会被拆成无效命令
+- **解决**：本仓库的 `.bat` 文件已使用 **GBK（ANSI）** 编码保存，请勿用 UTF-8 重新保存
 - 确保以管理员权限运行
-- 检查UAC设置
+- 检查 UAC 设置
 - 临时关闭杀毒软件
-- 检查脚本文件编码（应为UTF-8）
 
-**2. 注册表项删除失败**
+**2. 脚本执行失败（其他原因）**
+- 确保以管理员权限运行
+- 检查 UAC 设置
+- 临时关闭杀毒软件
+
+**3. 注册表项删除失败**
 - 使用regedit手动删除
 - 检查注册表权限设置
 - 确保没有其他程序占用
 - 尝试重启后再次执行
 
-**3. 服务重启失败**
+**4. 服务重启失败**
 - 检查是否有活动的远程桌面连接
 - 手动停止并启动TermService服务
 - 检查服务依赖关系
 - 查看Windows事件日志
 
-**4. 计划任务创建失败**
+**5. 计划任务创建失败**
 - 确保任务计划程序服务正在运行
 - 检查系统策略限制
 - 手动通过任务计划程序创建
 - 验证脚本路径是否正确
 
-**5. 编码显示问题**
-- 脚本已使用UTF-8编码（chcp 65001）
-- 如果仍显示乱码，检查控制台字体设置
-- 建议使用Windows PowerShell或命令提示符
+**6. 编码显示问题**
+- `.bat` 批处理文件使用 **GBK（ANSI）** 编码，适配中文 Windows Server
+- `.ps1` PowerShell 脚本使用 UTF-8 编码
+- 若用 VS Code / Cursor 编辑 `.bat`，保存时请选择 **GBK** 或 **ANSI**，不要选 UTF-8
+- 如果控制台中文乱码，确认未手动执行 `chcp 65001`（旧版脚本曾误用此设置）
 
-**6. 宽限期验证失败**
+**7. 宽限期验证失败**
 - WMI查询可能在某些版本不支持（正常现象）
 - 使用检查脚本验证注册表项
 - 重新登录RDS会话查看实际提示
@@ -405,7 +512,7 @@ net start TermService
 - 记录所有操作以备审计
 
 ### 脚本安全
-- 所有脚本使用UTF-8编码，避免编码问题
+- `.bat` 文件使用 GBK 编码，`.ps1` 文件使用 UTF-8 编码
 - 脚本包含错误处理和验证机制
 - 自动备份注册表，可随时恢复
 - 详细的日志记录，便于审计
@@ -425,14 +532,23 @@ net start TermService
 
 ## 更新日志
 
-### v2.0 (最新版本)
-- ✅ 修复所有脚本的编码问题（UTF-8支持）
+### v2.1（当前版本）
+- ✅ 新增「效果说明」章节，明确工具有效性与使用限制
+- ✅ 新增「你需要哪些脚本」快速指引，明确必用 / 可选脚本
+- ✅ 新增「当前状态」与「文件编码说明」
+- ✅ 两个重置脚本统一操作顺序（先停服务再删注册表）
+- ✅ **修复 `.bat` 编码问题**：改为 GBK，移除 `chcp 65001`，解决 `'xxx' is not recognized` 报错
+- ✅ 计划任务创建脚本增加凌晨 4:00 / 5:00 / 6:00 执行时间选项
+- ✅ 新增 `Cleanup_Old_Files.bat`，自动保留最新 5 份备份/日志
+
+### v2.0
 - ✅ 添加自动模式支持（计划任务自动重启）
 - ✅ 改进错误处理和验证机制
 - ✅ 添加多个检查脚本（完整版和简化版）
 - ✅ 改进日期格式处理（更好的兼容性）
 - ✅ 优化计划任务创建脚本
 - ✅ 添加详细的日志记录
+- ⚠️ v2.0 曾误用 UTF-8 编码，已在 v2.1 修复
 
 ### v1.0
 - 初始版本发布

@@ -1,177 +1,182 @@
 @echo off
-chcp 65001 >nul
-:: Windows Server RDSå®½é™æœŸé‡ç½®å·¥å…· - æ— é‡å¯è‡ªåŠ¨ç‰ˆæœ¬
-:: ä½¿ç”¨ç®¡ç†å‘˜æƒé™è¿è¡Œæ­¤è„šæœ¬
+rem Windows Server RDS Grace Period Reset - NoReboot
+rem Run as Administrator
 
 echo ========================================
-echo Windows Server RDSå®½é™æœŸé‡ç½®å·¥å…· - æ— é‡å¯ç‰ˆæœ¬
-echo æ‰§è¡Œæ—¶é—´: %date% %time%
+echo Windows Server RDS¿íÏŞÆÚÖØÖÃ¹¤¾ß - ÎŞÖØÆô°æ±¾
+echo Ö´ĞĞÊ±¼ä: %date% %time%
 echo ========================================
 echo.
 
-:: æ£€æŸ¥ç®¡ç†å‘˜æƒé™
+:: ¼ì²é¹ÜÀíÔ±È¨ÏŞ
 net session >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] éœ€è¦ç®¡ç†å‘˜æƒé™æ‰èƒ½æ‰§è¡Œæ­¤è„šæœ¬ï¼
+    echo [´íÎó] ĞèÒª¹ÜÀíÔ±È¨ÏŞ²ÅÄÜÖ´ĞĞ´Ë½Å±¾£¡
     exit /b 1
 ) else (
-    echo [ä¿¡æ¯] æ£€æµ‹åˆ°ç®¡ç†å‘˜æƒé™ï¼Œç»§ç»­æ‰§è¡Œ...
+    echo [ĞÅÏ¢] ¼ì²âµ½¹ÜÀíÔ±È¨ÏŞ£¬¼ÌĞøÖ´ĞĞ...
 )
 
-:: åˆ›å»ºæ—¥å¿—æ–‡ä»¶
+:: ´´½¨ÈÕÖ¾ÎÄ¼ş
 for /f "tokens=2-4 delims=/ " %%a in ('date /t') do (set mydate=%%c%%a%%b)
 for /f "tokens=1-2 delims=/:" %%a in ('time /t') do (set mytime=%%a%%b)
 set mytime=%mytime: =0%
 set LOG_FILE=%~dp0RDS_Reset_Log_%mydate%_%mytime%.txt
-echo å¼€å§‹æ‰§è¡ŒRDSå®½é™æœŸé‡ç½® - %date% %time% > "%LOG_FILE%"
+echo ¿ªÊ¼Ö´ĞĞRDS¿íÏŞÆÚÖØÖÃ - %date% %time% > "%LOG_FILE%"
 
 echo.
-echo [æ­¥éª¤1] å¤‡ä»½å½“å‰æ³¨å†Œè¡¨...
+echo [²½Öè1] ±¸·İµ±Ç°×¢²á±í...
 reg export "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM" "%~dp0RCM_Backup_NoReboot_%mydate%.reg" >nul 2>&1
 if errorlevel 1 (
-    echo [è­¦å‘Š] æ³¨å†Œè¡¨å¤‡ä»½å¤±è´¥ï¼Œä½†å°†ç»§ç»­æ‰§è¡Œ
-    echo æ³¨å†Œè¡¨å¤‡ä»½å¤±è´¥ - %date% %time% >> "%LOG_FILE%"
+    echo [¾¯¸æ] ×¢²á±í±¸·İÊ§°Ü£¬µ«½«¼ÌĞøÖ´ĞĞ
+    echo ×¢²á±í±¸·İÊ§°Ü - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [æˆåŠŸ] æ³¨å†Œè¡¨å·²å¤‡ä»½
-    echo æ³¨å†Œè¡¨å¤‡ä»½æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+    echo [³É¹¦] ×¢²á±íÒÑ±¸·İ
+    echo ×¢²á±í±¸·İ³É¹¦ - %date% %time% >> "%LOG_FILE%"
 )
 
 echo.
-echo [æ­¥éª¤2] æ£€æŸ¥å½“å‰æ³¨å†Œè¡¨çŠ¶æ€...
+echo [²½Öè2] ¼ì²éµ±Ç°×¢²á±í×´Ì¬...
 reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" >nul 2>&1
 if errorlevel 1 (
-    echo [ä¿¡æ¯] æœªæ‰¾åˆ°GracePeriodæ³¨å†Œè¡¨é¡¹
-    echo æœªæ‰¾åˆ°GracePeriodé¡¹ - %date% %time% >> "%LOG_FILE%"
+    echo [ĞÅÏ¢] Î´ÕÒµ½GracePeriod×¢²á±íÏî
+    echo Î´ÕÒµ½GracePeriodÏî - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [ä¿¡æ¯] æ‰¾åˆ°GracePeriodæ³¨å†Œè¡¨é¡¹ï¼Œå‡†å¤‡åˆ é™¤
-    echo æ‰¾åˆ°GracePeriodé¡¹ - %date% %time% >> "%LOG_FILE%"
+    echo [ĞÅÏ¢] ÕÒµ½GracePeriod×¢²á±íÏî£¬×¼±¸É¾³ı
+    echo ÕÒµ½GracePeriodÏî - %date% %time% >> "%LOG_FILE%"
 )
 
 echo.
-echo [æ­¥éª¤3] æ£€æŸ¥è¿œç¨‹æ¡Œé¢æœåŠ¡çŠ¶æ€...
+echo [²½Öè3] ¼ì²éÔ¶³Ì×ÀÃæ·şÎñ×´Ì¬...
 sc query TermService | find "RUNNING" >nul
 if errorlevel 1 (
-    echo [ä¿¡æ¯] è¿œç¨‹æ¡Œé¢æœåŠ¡æœªè¿è¡Œ
+    echo [ĞÅÏ¢] Ô¶³Ì×ÀÃæ·şÎñÎ´ÔËĞĞ
     set SERVICE_WAS_RUNNING=0
 ) else (
-    echo [ä¿¡æ¯] è¿œç¨‹æ¡Œé¢æœåŠ¡æ­£åœ¨è¿è¡Œ
+    echo [ĞÅÏ¢] Ô¶³Ì×ÀÃæ·şÎñÕıÔÚÔËĞĞ
     set SERVICE_WAS_RUNNING=1
 )
 
 echo.
-echo [æ­¥éª¤4] æ‰§è¡Œå®½é™æœŸé‡ç½®æ“ä½œ...
+echo [²½Öè4] Ö´ĞĞ¿íÏŞÆÚÖØÖÃ²Ù×÷...
 
-:: æ“ä½œ1: åœæ­¢æœåŠ¡ -> åˆ é™¤æ³¨å†Œè¡¨ -> é‡å¯æœåŠ¡
-echo [4.1] ä¸´æ—¶åœæ­¢è¿œç¨‹æ¡Œé¢æœåŠ¡...
+:: ²Ù×÷1: Í£Ö¹·şÎñ -> É¾³ı×¢²á±í -> ÖØÆô·şÎñ
+echo [4.1] ÁÙÊ±Í£Ö¹Ô¶³Ì×ÀÃæ·şÎñ...
 net stop TermService /y >nul 2>&1
 if errorlevel 1 (
-    echo [è­¦å‘Š] æœåŠ¡åœæ­¢å¤±è´¥ï¼Œå°è¯•å¼ºåˆ¶åœæ­¢
+    echo [¾¯¸æ] ·şÎñÍ£Ö¹Ê§°Ü£¬³¢ÊÔÇ¿ÖÆÍ£Ö¹
     taskkill /f /im svchost.exe /fi "services eq TermService" >nul 2>&1
-    echo æœåŠ¡å¼ºåˆ¶åœæ­¢ - %date% %time% >> "%LOG_FILE%"
+    echo ·şÎñÇ¿ÖÆÍ£Ö¹ - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [æˆåŠŸ] è¿œç¨‹æ¡Œé¢æœåŠ¡å·²åœæ­¢
-    echo æœåŠ¡åœæ­¢æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+    echo [³É¹¦] Ô¶³Ì×ÀÃæ·şÎñÒÑÍ£Ö¹
+    echo ·şÎñÍ£Ö¹³É¹¦ - %date% %time% >> "%LOG_FILE%"
 )
 
-:: ç­‰å¾…æœåŠ¡å®Œå…¨åœæ­¢
+:: µÈ´ı·şÎñÍêÈ«Í£Ö¹
 timeout /t 3 >nul
 
-echo [4.2] åˆ é™¤GracePeriodæ³¨å†Œè¡¨é¡¹...
+echo [4.2] É¾³ıGracePeriod×¢²á±íÏî...
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" /f >nul 2>&1
 if errorlevel 1 (
-    echo [ä¿¡æ¯] GracePeriodæ³¨å†Œè¡¨é¡¹åˆ é™¤å¤±è´¥æˆ–ä¸å­˜åœ¨
-    echo æ³¨å†Œè¡¨åˆ é™¤å¤±è´¥ - %date% %time% >> "%LOG_FILE%"
+    echo [ĞÅÏ¢] GracePeriod×¢²á±íÏîÉ¾³ıÊ§°Ü»ò²»´æÔÚ
+    echo ×¢²á±íÉ¾³ıÊ§°Ü - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [æˆåŠŸ] GracePeriodæ³¨å†Œè¡¨é¡¹å·²åˆ é™¤
-    echo æ³¨å†Œè¡¨åˆ é™¤æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+    echo [³É¹¦] GracePeriod×¢²á±íÏîÒÑÉ¾³ı
+    echo ×¢²á±íÉ¾³ı³É¹¦ - %date% %time% >> "%LOG_FILE%"
 )
 
-echo [4.3] æ¸…ç†ç›¸å…³ç¼“å­˜...
-:: åˆ é™¤å¯èƒ½çš„ç¼“å­˜æ–‡ä»¶
+echo [4.3] ÇåÀíÏà¹Ø»º´æ...
+:: É¾³ı¿ÉÄÜµÄ»º´æÎÄ¼ş
 del /f /q "%SystemRoot%\System32\lsass.exe.log" >nul 2>&1
 del /f /q "%SystemRoot%\System32\termsrv.dll.log" >nul 2>&1
 
-echo [4.4] é‡æ–°å¯åŠ¨è¿œç¨‹æ¡Œé¢æœåŠ¡...
+echo [4.4] ÖØĞÂÆô¶¯Ô¶³Ì×ÀÃæ·şÎñ...
 net start TermService >nul 2>&1
 if errorlevel 1 (
-    echo [é”™è¯¯] è¿œç¨‹æ¡Œé¢æœåŠ¡å¯åŠ¨å¤±è´¥
-    echo æœåŠ¡å¯åŠ¨å¤±è´¥ - %date% %time% >> "%LOG_FILE%"
+    echo [´íÎó] Ô¶³Ì×ÀÃæ·şÎñÆô¶¯Ê§°Ü
+    echo ·şÎñÆô¶¯Ê§°Ü - %date% %time% >> "%LOG_FILE%"
     
-    :: å°è¯•å¼ºåˆ¶å¯åŠ¨æœåŠ¡
-    echo [4.5] å°è¯•å¼ºåˆ¶å¯åŠ¨æœåŠ¡...
+    :: ³¢ÊÔÇ¿ÖÆÆô¶¯·şÎñ
+    echo [4.5] ³¢ÊÔÇ¿ÖÆÆô¶¯·şÎñ...
     sc start TermService >nul 2>&1
     if errorlevel 1 (
-        echo [é”™è¯¯] å¼ºåˆ¶å¯åŠ¨æœåŠ¡ä¹Ÿå¤±è´¥ï¼Œå¯èƒ½éœ€è¦æ‰‹åŠ¨é‡å¯æœåŠ¡å™¨
-        echo å¼ºåˆ¶å¯åŠ¨æœåŠ¡å¤±è´¥ - %date% %time% >> "%LOG_FILE%"
+        echo [´íÎó] Ç¿ÖÆÆô¶¯·şÎñÒ²Ê§°Ü£¬¿ÉÄÜĞèÒªÊÖ¶¯ÖØÆô·şÎñÆ÷
+        echo Ç¿ÖÆÆô¶¯·şÎñÊ§°Ü - %date% %time% >> "%LOG_FILE%"
     ) else (
-        echo [æˆåŠŸ] å¼ºåˆ¶å¯åŠ¨æœåŠ¡æˆåŠŸ
-        echo å¼ºåˆ¶å¯åŠ¨æœåŠ¡æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+        echo [³É¹¦] Ç¿ÖÆÆô¶¯·şÎñ³É¹¦
+        echo Ç¿ÖÆÆô¶¯·şÎñ³É¹¦ - %date% %time% >> "%LOG_FILE%"
     )
 ) else (
-    echo [æˆåŠŸ] è¿œç¨‹æ¡Œé¢æœåŠ¡å·²å¯åŠ¨
-    echo æœåŠ¡å¯åŠ¨æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+    echo [³É¹¦] Ô¶³Ì×ÀÃæ·şÎñÒÑÆô¶¯
+    echo ·şÎñÆô¶¯³É¹¦ - %date% %time% >> "%LOG_FILE%"
 )
 
 echo.
-echo [æ­¥éª¤5] éªŒè¯é‡ç½®ç»“æœ...
+echo [²½Öè5] ÑéÖ¤ÖØÖÃ½á¹û...
 timeout /t 5 >nul
 
-:: æ£€æŸ¥æœåŠ¡çŠ¶æ€
+:: ¼ì²é·şÎñ×´Ì¬
 sc query TermService | find "RUNNING" >nul
 if errorlevel 1 (
-    echo [é”™è¯¯] è¿œç¨‹æ¡Œé¢æœåŠ¡çŠ¶æ€å¼‚å¸¸
-    echo æœåŠ¡éªŒè¯å¤±è´¥ - %date% %time% >> "%LOG_FILE%"
+    echo [´íÎó] Ô¶³Ì×ÀÃæ·şÎñ×´Ì¬Òì³£
+    echo ·şÎñÑéÖ¤Ê§°Ü - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [æˆåŠŸ] è¿œç¨‹æ¡Œé¢æœåŠ¡æ­£åœ¨è¿è¡Œ
-    echo æœåŠ¡éªŒè¯æˆåŠŸ - %date% %time% >> "%LOG_FILE%"
+    echo [³É¹¦] Ô¶³Ì×ÀÃæ·şÎñÕıÔÚÔËĞĞ
+    echo ·şÎñÑéÖ¤³É¹¦ - %date% %time% >> "%LOG_FILE%"
 )
 
-:: æ£€æŸ¥æ³¨å†Œè¡¨é¡¹æ˜¯å¦è¢«é‡æ–°åˆ›å»º
+:: ¼ì²é×¢²á±íÏîÊÇ·ñ±»ÖØĞÂ´´½¨
 reg query "HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server\RCM\GracePeriod" >nul 2>&1
 if errorlevel 1 (
-    echo [ä¿¡æ¯] GracePeriodé¡¹å°šæœªè¢«é‡æ–°åˆ›å»º
-    echo GracePeriodé¡¹å°šæœªè¢«é‡æ–°åˆ›å»º - %date% %time% >> "%LOG_FILE%"
+    echo [ĞÅÏ¢] GracePeriodÏîÉĞÎ´±»ÖØĞÂ´´½¨
+    echo GracePeriodÏîÉĞÎ´±»ÖØĞÂ´´½¨ - %date% %time% >> "%LOG_FILE%"
 ) else (
-    echo [ä¿¡æ¯] ç³»ç»Ÿå·²é‡æ–°åˆ›å»ºGracePeriodé¡¹ï¼ˆè¡¨ç¤ºé‡ç½®æˆåŠŸï¼‰
-    echo GracePeriodé¡¹å·²è¢«é‡æ–°åˆ›å»º - %date% %time% >> "%LOG_FILE%"
+    echo [ĞÅÏ¢] ÏµÍ³ÒÑÖØĞÂ´´½¨GracePeriodÏî£¨±íÊ¾ÖØÖÃ³É¹¦£©
+    echo GracePeriodÏîÒÑ±»ÖØĞÂ´´½¨ - %date% %time% >> "%LOG_FILE%"
 )
 
 echo.
-echo [æ­¥éª¤6] åº”ç”¨å…¶ä»–ä¼˜åŒ–...
+echo [²½Öè6] Ó¦ÓÃÆäËûÓÅ»¯...
 
-:: åˆ·æ–°ç»„ç­–ç•¥
-echo [6.1] åˆ·æ–°ç»„ç­–ç•¥...
+:: Ë¢ĞÂ×é²ßÂÔ
+echo [6.1] Ë¢ĞÂ×é²ßÂÔ...
 gpupdate /force >nul 2>&1
 
-:: é‡æ–°æ³¨å†Œç›¸å…³ç»„ä»¶
-echo [6.2] é‡æ–°æ³¨å†ŒRDSç»„ä»¶...
+:: ÖØĞÂ×¢²áÏà¹Ø×é¼ş
+echo [6.2] ÖØĞÂ×¢²áRDS×é¼ş...
 regsvr32 /s mstscax.dll >nul 2>&1
 regsvr32 /s rdpclip.exe >nul 2>&1
 
 echo.
 echo ========================================
-echo å®½é™æœŸé‡ç½®å®Œæˆï¼
+echo ¿íÏŞÆÚÖØÖÃÍê³É£¡
 echo.
-echo æ‰§è¡Œç»“æœï¼š
-echo - æ³¨å†Œè¡¨é¡¹å·²å¤„ç†
-echo - RDSæœåŠ¡å·²é‡å¯
-echo - ç»„ç­–ç•¥å·²åˆ·æ–°
-echo - ç›¸å…³ç»„ä»¶å·²é‡æ–°æ³¨å†Œ
+echo Ö´ĞĞ½á¹û£º
+echo - ×¢²á±íÏîÒÑ´¦Àí
+echo - RDS·şÎñÒÑÖØÆô
+echo - ×é²ßÂÔÒÑË¢ĞÂ
+echo - Ïà¹Ø×é¼şÒÑÖØĞÂ×¢²á
 echo.
-echo æ³¨æ„äº‹é¡¹ï¼š
-echo 1. å®½é™æœŸåº”å·²é‡ç½®ä¸º120å¤©
-echo 2. æœåŠ¡å·²é‡æ–°å¯åŠ¨
-echo 3. å½“å‰è¿œç¨‹è¿æ¥å¯èƒ½å·²è¢«ä¸­æ–­
-echo 4. è¯·å»ºç«‹æ–°çš„è¿œç¨‹è¿æ¥
+echo ×¢ÒâÊÂÏî£º
+echo 1. ¿íÏŞÆÚÓ¦ÒÑÖØÖÃÎª120Ìì
+echo 2. ·şÎñÒÑÖØĞÂÆô¶¯
+echo 3. µ±Ç°Ô¶³ÌÁ¬½Ó¿ÉÄÜÒÑ±»ÖĞ¶Ï
+echo 4. Çë½¨Á¢ĞÂµÄÔ¶³ÌÁ¬½Ó
 echo ========================================
 
-:: è®°å½•å®ŒæˆçŠ¶æ€
-echo è„šæœ¬æ‰§è¡Œå®Œæˆ - %date% %time% >> "%LOG_FILE%"
-echo æ—¥å¿—æ–‡ä»¶: %LOG_FILE%
+:: ¼ÇÂ¼Íê³É×´Ì¬
+echo ½Å±¾Ö´ĞĞÍê³É - %date% %time% >> "%LOG_FILE%"
+echo ÈÕÖ¾ÎÄ¼ş: %LOG_FILE%
+rem ×Ô¶¯ÇåÀí¾É±¸·İ/ÈÕÖ¾£¨Ä¬ÈÏ±£Áô×îĞÂ 5 ·İ£¬¿ÉÍ¨¹ı»·¾³±äÁ¿ KEEP_BACKUPS ĞŞ¸Ä£©
+if not defined KEEP_BACKUPS set KEEP_BACKUPS=5
+if exist "%~dp0Cleanup_Old_Files.bat" (
+    call "%~dp0Cleanup_Old_Files.bat" "%~dp0" "RCM_Backup_NoReboot_*.reg" %KEEP_BACKUPS%
+    call "%~dp0Cleanup_Old_Files.bat" "%~dp0" "RDS_Reset_Log_*.txt" %KEEP_BACKUPS%
+)
 
-:: å¦‚æœæ˜¯è‡ªåŠ¨æ‰§è¡Œï¼ˆè®¡åˆ’ä»»åŠ¡ï¼‰ï¼Œåˆ™ç›´æ¥é€€å‡º
+:: Èç¹ûÊÇ×Ô¶¯Ö´ĞĞ£¨¼Æ»®ÈÎÎñ£©£¬ÔòÖ±½ÓÍË³ö
 if "%1"=="auto" (
-    echo [è‡ªåŠ¨æ¨¡å¼] è„šæœ¬æ‰§è¡Œå®Œæˆï¼Œè‡ªåŠ¨é€€å‡º
+    echo [×Ô¶¯Ä£Ê½] ½Å±¾Ö´ĞĞÍê³É£¬×Ô¶¯ÍË³ö
     exit /b 0
 ) else (
     echo.
